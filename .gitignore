@@ -125,6 +125,7 @@ celerybeat.pid
 env/
 venv/
 .venv*
+.venv_IoT/
 ENV/
 env.bak/
 venv.bak/
