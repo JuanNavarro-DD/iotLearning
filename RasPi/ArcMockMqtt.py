@@ -11,18 +11,20 @@ import random
 from datetime import datetime as dt
 
 def on_connect(client, userdata, flags, response_code):
-    print(f'connected to broker: {response_code}')
+    connackString = {0: 'Connection successful',
+                      1: 'Connection refused - incorrect protocol version',
+                      2: 'Connection refused - invalid client identifier',
+                      3: 'Connection refused - server unavailable',
+                      4: 'Connection refused - bad username or password',
+                      5: 'Connection refused - not authorized'}
+    print(f'connected to broker: {connackString[response_code]}')
 
 with open('./brokerPassword.txt', 'r') as f:
     brokerPassword = f.read()
 
 mqttClient = mqtt.Client(protocol=mqtt.MQTTv311)
-mqttClient.on_connect = on_connect
-# mqttClient.tls_set(ca_certs='./ca.crt')
-# mqttClient.tls_set(ca_certs='./ca.crt',certfile='./client.crt',keyfile='./client.key',tls_version=ssl.PROTOCOL_TLSv1_2)
 mqttClient.username_pw_set('mqtt', brokerPassword)
-
-mqttClient.tls_insecure_set(True)
+mqttClient.on_connect = on_connect
 mqttClient.connect("192.168.68.114", 1883)
 
 def publish_data(txt):
@@ -38,7 +40,7 @@ def publish_data(txt):
             dataPayload = json.dumps({'id':valueId,'v': data, 'q':False, 't':epochTimestamp})
         else:
             dataPayload = json.dumps({'id':valueId,'v': random.choice([0,1]), 'q':False, 't':epochTimestamp})
-        mqttClient.publish('RasPi/data', payload=dataPayload)
+        mqttClient.publish('mqtt/123', payload=dataPayload)
         time.sleep(1)
 
 
