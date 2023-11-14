@@ -33,7 +33,7 @@ def publish_data(txt):
 
 if __name__ == '__main__':
     
-    mqttClient = mqtt.Client(protocol=mqtt.MQTTv311)
+    mqttClient = mqtt.Client()
     mqttClient.tls_set(ca_certs='./rootCA.pem', certfile='./certificate.pem.crt', keyfile='./private.pem.key')
     mqttClient.on_connect = on_connect
     mqttClient.connect("a3nrtfu6i3fchr-ats.iot.ap-southeast-2.amazonaws.com", 8883)
