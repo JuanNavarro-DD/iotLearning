@@ -4,7 +4,6 @@ from gpiozero import DistanceSensor
 
 import time
 import paho.mqtt.client as mqtt
-import ssl
 import json
 import _thread
 import random

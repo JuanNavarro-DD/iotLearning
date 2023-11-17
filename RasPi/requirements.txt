@@ -1,3 +1,5 @@
 gpiozero==2.0
 paho-mqtt==1.6.1
 boto3==1.28.75
+asyncua==1.0.5
+AWSIoTPythonSDK==1.5.2
