@@ -1,17 +1,17 @@
 import asyncio
 import random
-from asyncio import Server
+from asyncua import Server
 import logging
 
 logging.basicConfig(level=logging.INFO)
-_logger = logging.getLogger('asyncua')
+_logger = logging.getLogger()
 
 
 async def main():
     # setup our server
     server = Server()
     await server.init()
-    server.set_endpoint('opc.tcp://<IP-ADDRESS>:4840/opcua/')    
+    server.set_endpoint('opc.tcp://192.168.68.132:4840/opcua/')    
     server.set_server_name("OPC-UA Test Server")
 
     # setup our own namespace, not really necessary but should as spec
@@ -21,7 +21,7 @@ async def main():
     objFloodDetect = await server.nodes.objects.add_object(idx, 'FloodDetection')
     varWaterLvl = await objFloodDetect.add_variable(idx, 'waterLevel', 0)
     varPressure = await objFloodDetect.add_variable(idx, 'pressure', 0)
-    varPumpSetting = await objFloodDetect.add_variable(idx, 'pumpsetting', 0)
+    varPumpSetting = await objFloodDetect.add_variable(idx, 'pumpSetting', 0)
     _logger.info("starting server...")
 
 
