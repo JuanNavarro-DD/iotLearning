@@ -7,6 +7,8 @@ from aws_cdk import (
     aws_s3 as s3,
     RemovalPolicy,
     aws_iam as iam,
+    aws_kinesisvideo as kinesisvideo,
+    aws_kms as kms,
     CfnTag
 )
 from constructs import Construct
@@ -22,6 +24,13 @@ class IoTTwinMakerStack(Stack):
                                        auto_delete_objects=True,
                                        block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
                                        )
+        
+        videoStream = kinesisvideo.CfnStream(self, "VideoStream",
+                                            data_retention_in_hours=2,
+                                            device_name="RaspiCamera",
+                                            name="RaspiCameraStream",
+                                            tags=[CfnTag(key="Project", value="DLearnIoT")]
+                                            )
 
         siteWiseModel = iotsitewise.CfnAssetModel(self, "SiteWiseModel",
                                                     asset_model_name="DistanceSensorModel",
