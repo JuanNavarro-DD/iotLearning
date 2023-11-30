@@ -25,10 +25,19 @@ class IoTTwinMakerStack(Stack):
                                        block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
                                        )
         
+        kinesisVideoKey = kms.Key(self, "KinesisVideoKey",
+                                alias="KinesisVideoKey",
+                                description="Kinesis Video Key",
+                                removal_policy=RemovalPolicy.DESTROY,
+                                enabled=True,
+                                enable_key_rotation=True,
+                                )
+        
         videoStream = kinesisvideo.CfnStream(self, "VideoStream",
                                             data_retention_in_hours=2,
                                             device_name="RaspiCamera",
                                             name="RaspiCameraStream",
+                                            kms_key_id=kinesisVideoKey.key_id,
                                             tags=[CfnTag(key="Project", value="DLearnIoT")]
                                             )
 
