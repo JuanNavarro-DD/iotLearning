@@ -57,7 +57,7 @@ class IoTTwinMakerStack(Stack):
                                                             name="Raspberry ID",
                                                             logical_id="RaspiId",
                                                             type=iotsitewise.CfnAssetModel.PropertyTypeProperty(
-                                                                type_name="Attributes"
+                                                                type_name="Attribute"
                                                             ),
                                                         )
                                                         ]
@@ -69,15 +69,10 @@ class IoTTwinMakerStack(Stack):
                                           tags=[CfnTag(key="Project", value="DLearnIoT")]
                                           )
         
-
-        iotTwinMakerRole = iam.Role(self, "IoTTwinMakerRole",
-                                    assumed_by=iam.ServicePrincipal("iottwinmaker.amazonaws.com"),
-                                    role_name="IoTTwinMakerRole",
-                                    )
         s3Policy = iam.PolicyStatement(
             actions=["s3:GetBucket*", "s3:GetObject", "s3:ListBucket","s3:PutObject", "s3:DeleteObject"],
             effect=iam.Effect.ALLOW,
-            resources=[iotTwinMakerBucket.bucket_arn + "/*"]
+            resources=[iotTwinMakerBucket.bucket_arn, iotTwinMakerBucket.arn_for_objects("*")]
         )
         iotSiteWisePolicy = iam.PolicyStatement(
             actions=["iotsitewise:*"],
@@ -85,12 +80,23 @@ class IoTTwinMakerStack(Stack):
             resources=[raspiAsset.attr_asset_arn]
         )
 
+        iotTwinMakerRole = iam.Role(self, "IoTTwinMakerRole",
+                                    assumed_by=iam.ServicePrincipal("iottwinmaker.amazonaws.com"),
+                                    role_name="IoTTwinMakerRole",
+                                    inline_policies={'IoTTwinMakerPolicy': iam.PolicyDocument(
+                                        statements=[s3Policy,iotSiteWisePolicy]
+                                    )}
+                                    )
+        
+
+
+
         distanceThing = iot.CfnThing(self, "DistanceThing",
                                      thing_name="DistanceRasPiSensor"
                                      )
 
         DLearnWorkspace = iottwinmaker.CfnWorkspace(self, "DLearnWorkspace",
-                                                    role="",
+                                                    role=iotTwinMakerRole.role_arn,
                                                     s3_location=iotTwinMakerBucket.bucket_arn,
                                                     workspace_id="DLearnWorkspace",
                                                     description="IoT Twin Maker Sensor Workspace",
@@ -99,3 +105,4 @@ class IoTTwinMakerStack(Stack):
                                                     }
                                                     # workspace_data_retention_period=Duration.days(7),
                                                 )
+    
