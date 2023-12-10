@@ -42,5 +42,21 @@ make
 
 The [startStreaming.sh](RasPi/startStreaming.sh) script will start the video streaming from the raspberry pi to AWS Kinesis Video Streams. This script gets run from the [turnCameraOn.py](RasPi/turnCameraOn.py) script.
 
+## AWS IoT
+This project uses AWS IoT to send and receive messages from the raspberry pi. The raspberry pi will send the distance measured by the sensor to AWS IoT through mqtt. The raspberry pi is also subscribed to a topic in AWS IoT and will receive messages from AWS IoT core. The raspberry pi will then turn the camera on depending on the distance measured by the sensor and start streaming video to AWS Kinesis Video Streams. An IoT Twin Maker workspace is configured to display the scene in a grafana dashboard.
+
+Most of the configuration and services for this project are deployed using cdk. There are some configurations such as the IoT Core Thing connection that are needed to be done manually because they use certificates to connect the raspberry pi to AWS IoT. This code is available in the [stack folder](RasPi/IoTTwinMaker).
+### AWS IoT - IoT Core
+IoT Core is used to send and receive messages from the raspberry pi. The raspberry pi will send the distance measured by the sensor to AWS IoT through mqtt. The raspberry pi is also subscribed to a topic in AWS IoT and will receive messages from AWS IoT core. There is a rule in IoT Core that will send the messages received from the raspberry pi to IoT SiteWise.
+
+### AWS IoT - IoT SiteWise
+IoT Site Wise is used as the bridge between IoT Core and IoT Twin Maker. IoT SiteWise will receive the sensor data from IoT Core and will send it to IoT Twin Maker. This is done using the IoT site Wise connector already defined in IoT Twin Maker.
+
+### AWS IoT - IoT Twin Maker
+IoT Twin Maker is used to display the scene in a grafana dashboard. In IoT twin maker a scene is created using 3D models found online and the sensor data received from IoT SiteWise. The scene is then displayed in a grafana dashboard as well as the video streaming and the sensor data.
+
+
 # References
 1. [AWS Kinesis Video Streams Producer SDK for C++](https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/producersdk-cpp-rpi-download.html)
+2. [AWS cdk python documentation](https://docs.aws.amazon.com/cdk/api/v2/python/)
+3. [3D models](https://www.turbosquid.com/)
