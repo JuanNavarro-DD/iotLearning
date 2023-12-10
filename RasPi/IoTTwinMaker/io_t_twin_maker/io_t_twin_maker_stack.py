@@ -66,6 +66,9 @@ class IoTTwinMakerStack(Stack):
         raspiAsset = iotsitewise.CfnAsset(self, "RaspiAsset",
                                           asset_name="DistanceRaspi",
                                           asset_model_id=siteWiseModel.attr_asset_model_id,
+                                          asset_properties=[iotsitewise.CfnAsset.AssetPropertyProperty(
+                                              logical_id="Distance",
+                                              alias="raspi/Distance")],
                                           tags=[CfnTag(key="Project", value="DLearnIoT")]
                                           )
         
@@ -100,11 +103,17 @@ class IoTTwinMakerStack(Stack):
             effect=iam.Effect.ALLOW,
             resources=[raspiAsset.attr_asset_arn]
         )
+        timeSeriesMqttRepublishPolicy = iam.PolicyStatement(
+            actions=["iotsitewise:BatchPutAssetPropertyValue"],
+            effect=iam.Effect.ALLOW,
+            resources=[f"arn:aws:iotsitewise:{self.region}:{self.account}:time-series/*"],
+            conditions={"StringLike":{"iotsitewise:propertyAlias": ["raspi/Distance"]}}
+        )
         routingRole = iam.Role(self, "RoutingRole",
                                assumed_by=iam.ServicePrincipal("iot.amazonaws.com"),
                                role_name="RoutingRole",
                                inline_policies={'RoutingPolicy': iam.PolicyDocument(
-                                   statements=[routingMqttRepublishPolicy]
+                                   statements=[routingMqttRepublishPolicy, timeSeriesMqttRepublishPolicy]
                                )}
                                )
         
@@ -124,7 +133,7 @@ class IoTTwinMakerStack(Stack):
                                                                     double_value="${value}"
                                                                 )
                                                             )],
-                                                            property_alias="Distance",
+                                                            property_alias="raspi/Distance",
                                                             asset_id=raspiAsset.attr_asset_id,
                                                             # property_id=siteWiseModel.attr_asset_model_id
                                                         )],
