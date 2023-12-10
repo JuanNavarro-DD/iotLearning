@@ -80,14 +80,19 @@ class IoTTwinMakerStack(Stack):
         iotSiteWisePolicy = iam.PolicyStatement(
             actions=["iotsitewise:*"],
             effect=iam.Effect.ALLOW,
-            resources=[raspiAsset.attr_asset_arn]
+            resources=[raspiAsset.attr_asset_arn, siteWiseModel.attr_asset_model_arn]
+        )
+        kinesisvideoStreamPolicy = iam.PolicyStatement(
+            actions=["kinesisvideo:*"],
+            effect=iam.Effect.ALLOW,
+            resources=[videoStream.attr_arn]
         )
 
         iotTwinMakerRole = iam.Role(self, "IoTTwinMakerRole",
                                     assumed_by=iam.ServicePrincipal("iottwinmaker.amazonaws.com"),
                                     role_name="IoTTwinMakerRole",
                                     inline_policies={'IoTTwinMakerPolicy': iam.PolicyDocument(
-                                        statements=[s3Policy,iotSiteWisePolicy]
+                                        statements=[s3Policy,iotSiteWisePolicy, kinesisvideoStreamPolicy]
                                     )}
                                     )
         
@@ -154,4 +159,55 @@ class IoTTwinMakerStack(Stack):
                                                     }
                                                     # workspace_data_retention_period=Duration.days(7),
                                                 )
-    
+        entityStreamVideo = iottwinmaker.CfnEntity(self, "EntityStreamVideo",
+                                                   entity_name="RaspiCameraStream",
+                                                   workspace_id=DLearnWorkspace.workspace_id,
+                                                   components={
+                                                       "RaspiCamera": iottwinmaker.CfnEntity.ComponentProperty(
+                                                           component_name="RaspiCamera",
+                                                           component_type_id="com.amazon.kvs.video",
+                                                           properties={
+                                                               "KinesisVideoStreamName": iottwinmaker.CfnEntity.PropertyProperty(
+                                                                   value=iottwinmaker.CfnEntity.DataValueProperty(
+                                                                       string_value="RaspiCameraStream"
+                                                                   )
+                                                               )
+                                                            },
+                                                            status=iottwinmaker.CfnEntity.StatusProperty(
+                                                                state="ACTIVE"
+                                                            )
+                                                       )
+                                                   },
+                                                   tags={
+                                                       "Project": "DLearnIoT",
+                                                   }
+                                                   )
+        
+        entityDistanceSensor = iottwinmaker.CfnEntity(self, "EntityDistanceSensor",
+                                                      entity_name="DistanceSensor",
+                                                      workspace_id=DLearnWorkspace.workspace_id,
+                                                      components={
+                                                          "RaspiDistance": iottwinmaker.CfnEntity.ComponentProperty(
+                                                              component_name="RaspiDistance",
+                                                              component_type_id="com.amazon.iotsitewise.connector",
+                                                              properties={
+                                                                  "sitewiseAssetId": iottwinmaker.CfnEntity.PropertyProperty(
+                                                                      value=iottwinmaker.CfnEntity.DataValueProperty(
+                                                                          string_value=raspiAsset.attr_asset_id
+                                                                      )
+                                                                  ),
+                                                                  "sitewiseAssetModelId": iottwinmaker.CfnEntity.PropertyProperty(
+                                                                        value=iottwinmaker.CfnEntity.DataValueProperty(
+                                                                            string_value=siteWiseModel.attr_asset_model_id
+                                                                        )
+                                                                    )
+                                                              },
+                                                              status=iottwinmaker.CfnEntity.StatusProperty(
+                                                                    state="ACTIVE"
+                                                              )
+                                                          )
+                                                      },
+                                                      tags={
+                                                          "Project": "DLearnIoT",
+                                                      }
+                                                    )
