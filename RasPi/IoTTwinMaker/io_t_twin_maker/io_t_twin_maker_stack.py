@@ -94,6 +94,46 @@ class IoTTwinMakerStack(Stack):
         distanceThing = iot.CfnThing(self, "DistanceThing",
                                      thing_name="DistanceRasPiSensor"
                                      )
+        
+        routingMqttRepublishPolicy = iam.PolicyStatement(
+            actions=["iotsitewise:BatchPutAssetPropertyValue"],
+            effect=iam.Effect.ALLOW,
+            resources=[raspiAsset.attr_asset_arn]
+        )
+        routingRole = iam.Role(self, "RoutingRole",
+                               assumed_by=iam.ServicePrincipal("iot.amazonaws.com"),
+                               role_name="RoutingRole",
+                               inline_policies={'RoutingPolicy': iam.PolicyDocument(
+                                   statements=[routingMqttRepublishPolicy]
+                               )}
+                               )
+        
+        routingRule = iot.CfnTopicRule(self, "RoutingRule",
+                                        rule_name="RoutingRule",
+                                        topic_rule_payload=iot.CfnTopicRule.TopicRulePayloadProperty(
+                                             sql="SELECT value FROM 'Raspi/distance' WHERE id = 'distance'",
+                                             aws_iot_sql_version="2016-03-23",
+                                             actions=[iot.CfnTopicRule.ActionProperty(
+                                                  iot_site_wise=iot.CfnTopicRule.IotSiteWiseActionProperty(
+                                                        put_asset_property_value_entries=[iot.CfnTopicRule.PutAssetPropertyValueEntryProperty(
+                                                            property_values=[iot.CfnTopicRule.AssetPropertyValueProperty(
+                                                                timestamp=iot.CfnTopicRule.AssetPropertyTimestampProperty(
+                                                                    time_in_seconds="${floor(timestamp() / 1E3)}"
+                                                                ),
+                                                                value=iot.CfnTopicRule.AssetPropertyVariantProperty(
+                                                                    double_value="${value}"
+                                                                )
+                                                            )],
+                                                            property_alias="Distance",
+                                                            asset_id=raspiAsset.attr_asset_id,
+                                                            # property_id=siteWiseModel.attr_asset_model_id
+                                                        )],
+                                                        role_arn=routingRole.role_arn
+                                                  )
+                                             )]
+                                        ),
+                                        tags=[CfnTag(key="Project", value="DLearnIoT")]
+                                        )
 
         DLearnWorkspace = iottwinmaker.CfnWorkspace(self, "DLearnWorkspace",
                                                     role=iotTwinMakerRole.role_arn,
