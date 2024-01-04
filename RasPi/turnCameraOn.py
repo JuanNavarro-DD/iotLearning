@@ -16,7 +16,7 @@ def startStreaming():
 
     # Start the bash script
     process = subprocess.Popen(['/bin/bash',bash_script], start_new_session=True)
-    time.sleep(60)
+    time.sleep(300)
 
     os.killpg(os.getpgid(process.pid), signal.SIGTERM)
     
@@ -41,8 +41,8 @@ def reset_trigger_flag():
     trigger_flag = False
 
 def on_message(client, userdata, message):
-    print(f'received message: {message.payload.decode()}')
-    _logger.critical(f'received message: {message.payload.decode()}')
+    # print(f'received message: {message.payload.decode()}')
+    # _logger.critical(f'received message: {message.payload.decode()}')
     messageDict = json.loads(message.payload.decode())
     turn_camera_on(messageDict['value'])
 
